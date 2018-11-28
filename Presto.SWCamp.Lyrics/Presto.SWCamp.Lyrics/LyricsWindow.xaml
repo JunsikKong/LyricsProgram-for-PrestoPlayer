@@ -19,7 +19,7 @@
 
         <TextBlock
             FontSize="14"
-            Text="테스트 커밋"
+            Text="테스트 커밋22"
             TextAlignment="Center" />
         
         <TextBlock
