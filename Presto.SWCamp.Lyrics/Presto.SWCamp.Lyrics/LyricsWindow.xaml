@@ -18,6 +18,11 @@
             TextAlignment="Center" />
 
         <TextBlock
+            FontSize="14"
+            Text="테스트 커밋"
+            TextAlignment="Center" />
+        
+        <TextBlock
             FontSize="24"
             Text="가사가 여기에 표시됩니다."
             TextAlignment="Center" />
