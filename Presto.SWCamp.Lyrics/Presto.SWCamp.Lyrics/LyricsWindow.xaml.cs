@@ -21,6 +21,15 @@ namespace Presto.SWCamp.Lyrics
     /// <summary>
     /// LyricsWindow.xaml에 대한 상호 작용 논리
     /// </summary>
+
+    /* 가사 싱크 프로그램
+     * 1. 싱크 가사 출력
+     * 2. [] 시간 부분만 파싱
+     * 3. 2줄 이상의 가사 출력
+     * 4. 재생중인 음악이 바뀔 경우, 전역변수 리스트에 시간(단위 : ms, 데이터형식 : int)과 문자열(데이터형식 : String)저장
+     * 5. timer를 통해 재생중인 가사의 리스트를 이진탐색으로 범위 탐색 후 UI에 가사 업데이트
+         */
+
     public partial class LyricsWindow : Window
     {
         List<string> lyricList = new List<string>(); // lrc 파일에서 시간 뒤의 문구(가사)를 저장하는 리스트
@@ -71,7 +80,6 @@ namespace Presto.SWCamp.Lyrics
                         }
                     }
                 }
-
                 String temp = "";
                 foreach (var x in lyricList)
                 {
@@ -91,21 +99,25 @@ namespace Presto.SWCamp.Lyrics
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            Double t = PrestoSDK.PrestoService.Player.Position;
             int cnt = timeList.Count;
-
-            for (int i = 0; i < cnt; i++) // for 문을 통한 단순탐색
+            if(cnt != 0)
             {
-                if (timeList[i] <= t && timeList[i + 1] > t)
-                {
-                    tbk3.Text = lyricList[i];
-                    tbk1.Text = PrestoSDK.PrestoService.Player.Position.ToString();
-                    tbk2.Text = timeList[i - 1].ToString() + "  " + timeList[i].ToString() + "  " + timeList[i + 1].ToString();
-                }
+                Double t = PrestoSDK.PrestoService.Player.Position;
+                if (t < timeList[0]) tbk3.Text = "";
+                else if(t >= timeList[cnt-1]) tbk3.Text = lyricList[cnt-1];
+                else tbk3.Text = lyricList[bSearch(timeList, t, 0, cnt-1)].ToString();
             }
         }
 
-        
-
+        private static int bSearch(List<int> lst ,Double val, int first, int last)
+        {
+            int mid = (first + last) / 2;
+            if (val >= lst[mid] && val < lst[mid + 1])
+                return mid;
+            else if (val < lst[mid])
+                return bSearch(lst, val, first, mid - 1);
+            else
+                return bSearch(lst, val, mid + 1, last);
+        }
     }
 }
