@@ -8,20 +8,55 @@
     Title="플레이어 가사 창"
     Width="639.687"
     Height="294.021"
+    Background="#3B4045"
     DataContext="{x:Static ps:PrestoSDK.PrestoService}"
     mc:Ignorable="d" HorizontalAlignment="Center">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height = "50"  />
             <RowDefinition Height = "*"  />
-            
+            <RowDefinition Height = "2*"  />
+            <RowDefinition Height = "*"  />
+            <RowDefinition Height = "50"  />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width = "*"  />
-            <ColumnDefinition Width = "*"  />
-            <ColumnDefinition Width = "4*"  />
         </Grid.ColumnDefinitions>
-        <TextBlock x:Name="tbk1" Grid.Row = "0"  Grid.Column = "0" HorizontalAlignment="Left" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top"/>
-        <TextBlock x:Name="tbk2" Grid.Row = "0"  Grid.Column = "1" HorizontalAlignment="Left" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top"/>
-        <TextBlock x:Name="tbk3" Grid.Row = "0"  Grid.Column = "2" HorizontalAlignment="Left" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top"/>
+
+        <TextBlock
+            x:Name="tbk1"
+            Grid.Row = "1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            TextWrapping="Wrap"
+            Text="TextBlock"
+            FontSize="14"
+            FontWeight="Bold"
+            Foreground="White"
+            Opacity=".5"
+            TextAlignment="Center"/>
+        <TextBlock
+            x:Name="tbk2"
+            Grid.Row = "2"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            TextWrapping="Wrap"
+            Text="TextBlock"
+            FontSize="22"
+            FontWeight="Bold"
+            Foreground="White"
+            TextAlignment="Center"/>
+        <TextBlock
+            x:Name="tbk3"
+            Grid.Row = "3"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            TextWrapping="Wrap"
+            Text="TextBlock"
+            FontSize="14"
+            FontWeight="Bold"
+            Foreground="White"
+            Opacity=".5"
+            TextAlignment="Center"/>
     </Grid>
 </Window>
