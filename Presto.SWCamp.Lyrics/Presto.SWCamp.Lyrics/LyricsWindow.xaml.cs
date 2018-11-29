@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
+using System.Windows.Threading;
 
 namespace Presto.SWCamp.Lyrics
 {
@@ -23,57 +24,88 @@ namespace Presto.SWCamp.Lyrics
     public partial class LyricsWindow : Window
     {
         List<string> lyricList = new List<string>(); // lrc 파일에서 시간 뒤의 문구(가사)를 저장하는 리스트
-        List<int> timeList = new List<int>(); // lrc 파일에서 시간을 저장하는 list(mm:ss.ff 형식의 시간을 (mm*60 + ss.ff)*1000 로 저장)
+        List<int> timeList = new List<int>(); // lrc 파일에서 시간을 저장하는 list(mm:ss.ff 형식의 시간을 mm*60000 + ss*1000 + ff*10 로 저장)
 
         public LyricsWindow()
         {
             InitializeComponent();
-            PrestoSDK.PrestoService.Player.StreamChanged += MusicChanged; //음악이 바뀔 때 해당 프로시저 수행
+            PrestoSDK.PrestoService.Player.StreamChanged += Stream_Changed; //음악이 바뀔 때 해당 이벤트 수행
+            var dt = new DispatcherTimer(); // 타이머 할당
+            dt.Interval = TimeSpan.FromMilliseconds(10); // 타이머 주기
+            dt.Tick += Timer_Tick; // 이벤트 지정
+            dt.Start(); // 타이머 시작
         }
 
-        private void MusicChanged(object sender, EventArgs e) //음악이 바뀔 때 수행되는 프로시저
+        private void Stream_Changed(object sender, EventArgs e) //음악이 바뀔 때 수행되는 이벤트
         {
-            lyricList.Clear();
-            timeList.Clear();
-
-            var musicFileName = System.IO.Path.GetFileNameWithoutExtension(PrestoSDK.PrestoService.Player.CurrentMusic.Path);
-            var lyricFilePath = System.IO.Path.GetDirectoryName(PrestoSDK.PrestoService.Player.CurrentMusic.Path) + @"\" + musicFileName + ".lrc";
-            String[] lines = File.ReadAllLines(lyricFilePath, Encoding.Default); // 경로의 파일의 줄을 읽는다. 글자가 깨지는 경우가 있어서 인코딩 입력
-
-            foreach (var line in lines)
+            try
             {
-                var m = line.Split('[')[1].Split(']')[0];
-                if (Regex.IsMatch(m, @"\d\d\:\d\d\.\d\d"))//m의 값이 2자리의 숫자일 경우
+                lyricList.Clear();
+                timeList.Clear();
+
+                var musicFileName = System.IO.Path.GetFileNameWithoutExtension(PrestoSDK.PrestoService.Player.CurrentMusic.Path);
+                var lyricFilePath = System.IO.Path.GetDirectoryName(PrestoSDK.PrestoService.Player.CurrentMusic.Path) + @"\" + musicFileName + ".lrc";
+                String[] lines = File.ReadAllLines(lyricFilePath, Encoding.Default); // 경로의 파일의 줄을 읽는다. 글자가 깨지는 경우가 있어서 인코딩 입력
+
+                foreach (var line in lines)
                 {
-                    int cnt = timeList.Count;
-                    int time = int.Parse(m.Split(':')[0]) * 60000 // mm
-                        + int.Parse(m.Split(':')[1].Split('.')[0]) * 1000 // ss
-                        + int.Parse(m.Split(':')[1].Split('.')[1]) * 10; // ff
-                    String lrc = line.Substring(10);
-                    
-                    if (cnt > 0 && timeList[cnt - 1] == time)
+                    var m = line.Split('[')[1].Split(']')[0];
+                    if (Regex.IsMatch(m, @"\d\d\:\d\d\.\d\d"))//m의 값이 2자리의 숫자일 경우
                     {
-                        String s = lyricList[cnt - 1];
-                        lyricList.RemoveAt(cnt - 1);
-                        lyricList.Add(s + "___" + lrc);
-                    }
-                    else
-                    {
-                        timeList.Add(time);
-                        lyricList.Add(lrc);
+                        int cnt = timeList.Count;
+                        int time = int.Parse(m.Split(':')[0]) * 60000 // mm
+                            + int.Parse(m.Split(':')[1].Split('.')[0]) * 1000 // ss
+                            + int.Parse(m.Split(':')[1].Split('.')[1]) * 10; // ff
+                        String lrc = line.Substring(10);
+
+                        if (cnt > 0 && timeList[cnt - 1] == time)
+                        {
+                            String s = lyricList[cnt - 1];
+                            lyricList.RemoveAt(cnt - 1);
+                            lyricList.Add(s + "___" + lrc);
+                        }
+                        else
+                        {
+                            timeList.Add(time);
+                            lyricList.Add(lrc);
+                        }
                     }
                 }
-            }
 
-            String temp = "";
-            foreach(var x in lyricList)
+                String temp = "";
+                foreach (var x in lyricList)
+                {
+                    temp += x + " \n";
+                }
+                //tbk1.Text = musicFileName;
+                //tbk2.Text = lyricFilePath;
+                //tbk3.Text = temp;
+            }
+            catch
             {
-                temp += x + " \n";
+                tbk1.Text = "가사 파일을 불러올 수 없습니다.";
+                tbk2.Text = "";
+                tbk3.Text = "";
             }
-
-            tbk1.Text = musicFileName;
-            tbk2.Text = lyricFilePath;
-            tbk3.Text = temp;
         }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            Double t = PrestoSDK.PrestoService.Player.Position;
+            int cnt = timeList.Count;
+
+            for (int i = 0; i < cnt; i++) // for 문을 통한 단순탐색
+            {
+                if (timeList[i] <= t && timeList[i + 1] > t)
+                {
+                    tbk3.Text = lyricList[i];
+                    tbk1.Text = PrestoSDK.PrestoService.Player.Position.ToString();
+                    tbk2.Text = timeList[i - 1].ToString() + "  " + timeList[i].ToString() + "  " + timeList[i + 1].ToString();
+                }
+            }
+        }
+
+        
+
     }
 }
