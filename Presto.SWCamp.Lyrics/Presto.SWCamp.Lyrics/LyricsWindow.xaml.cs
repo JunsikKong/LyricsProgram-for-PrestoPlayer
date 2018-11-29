@@ -23,7 +23,7 @@ namespace Presto.SWCamp.Lyrics
     public partial class LyricsWindow : Window
     {
         List<string> lyricList = new List<string>(); // lrc 파일에서 시간 뒤의 문구(가사)를 저장하는 리스트
-        List<string> timeList = new List<string>(); // lrc 파일에서 시간을 저장하는 list(mm:ss.ff 형식의 시간을 (mm*60 + ss.ff)*1000 로 저장)
+        List<int> timeList = new List<int>(); // lrc 파일에서 시간을 저장하는 list(mm:ss.ff 형식의 시간을 (mm*60 + ss.ff)*1000 로 저장)
 
         public LyricsWindow()
         {
@@ -45,22 +45,26 @@ namespace Presto.SWCamp.Lyrics
                 var m = line.Split('[')[1].Split(']')[0];
                 if (Regex.IsMatch(m, @"\d\d\:\d\d\.\d\d"))//m의 값이 2자리의 숫자일 경우
                 {
-                    if(timeList.Count>0 && timeList[timeList.Count-1]==m)
+                    int cnt = timeList.Count;
+                    int time = int.Parse(m.Split(':')[0]) * 60000 // mm
+                        + int.Parse(m.Split(':')[1].Split('.')[0]) * 1000 // ss
+                        + int.Parse(m.Split(':')[1].Split('.')[1]) * 10; // ff
+                    String lrc = line.Substring(10);
+                    
+                    if (cnt > 0 && timeList[cnt - 1] == time)
                     {
-                        String s = lyricList[lyricList.Count-1];
-                        lyricList.RemoveAt(lyricList.Count-1);
-                        lyricList.Add(s + "___" +line.Substring(10));
+                        String s = lyricList[cnt - 1];
+                        lyricList.RemoveAt(cnt - 1);
+                        lyricList.Add(s + "___" + lrc);
                     }
                     else
                     {
-                        timeList.Add(m);
-                        lyricList.Add(line.Substring(10));
+                        timeList.Add(time);
+                        lyricList.Add(lrc);
                     }
-                    
                 }
             }
 
-            
             String temp = "";
             foreach(var x in lyricList)
             {
