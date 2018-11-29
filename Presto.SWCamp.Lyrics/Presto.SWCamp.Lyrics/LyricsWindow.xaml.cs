@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Media.Animation;
 using System.Text.RegularExpressions;
 using System.Windows.Threading;
 
@@ -36,11 +37,22 @@ namespace Presto.SWCamp.Lyrics
         public LyricsWindow()
         {
             InitializeComponent();
-            PrestoSDK.PrestoService.Player.StreamChanged += Stream_Changed; //음악이 바뀔 때 해당 이벤트 수행
-            var dt = new DispatcherTimer(); // 타이머 할당
-            dt.Interval = TimeSpan.FromMilliseconds(10); // 타이머 주기
-            dt.Tick += Timer_Tick; // 이벤트 지정
-            dt.Start(); // 타이머 시작
+            // 시작시 폼의 투명도 천천히 보여주는 애니메이션 효과
+            DoubleAnimation dblani = new DoubleAnimation(); 
+            dblani.From = 0; 
+            dblani.To = 1;
+            dblani.Duration = TimeSpan.FromMilliseconds(500);
+            dblani.EasingFunction = new QuarticEase();
+            this.BeginAnimation(OpacityProperty, dblani);
+
+            // 재생중인 음악 변경시 수행할 이벤트
+            PrestoSDK.PrestoService.Player.StreamChanged += Stream_Changed;
+
+            // 현재 재생시간을 받아서 가사를 표시하는 타이머
+            var dt = new DispatcherTimer();
+            dt.Interval = TimeSpan.FromMilliseconds(10);
+            dt.Tick += Timer_Tick;
+            dt.Start();
         }
 
         private void Stream_Changed(object sender, EventArgs e) //음악이 바뀔 때 수행되는 이벤트
