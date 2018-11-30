@@ -29,7 +29,7 @@
 
         <TextBlock
             x:Name="tbk1"
-            Text="CBNU CAMP Project"
+            Text="CBNU SW CAMP Project"
             Grid.Row = "1"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
@@ -61,7 +61,7 @@
         </TextBlock>
         <TextBlock
             x:Name="tbk3"
-            Text="공준식"
+            Text=""
             Grid.Row = "3"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
