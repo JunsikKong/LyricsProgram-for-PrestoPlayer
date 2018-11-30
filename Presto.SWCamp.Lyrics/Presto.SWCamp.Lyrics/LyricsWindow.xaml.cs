@@ -17,10 +17,12 @@ using System.Text.RegularExpressions;
 using System.Windows.Threading;
 using System.Windows.Media.Animation;
 using Microsoft.Win32;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Presto.SWCamp.Lyrics
 {
-    /* 가사 싱크 프로그램
+    /**************** 가사 싱크 프로그램 기능 ****************
      * 1. 싱크 가사 출력
      * 2. [] 시간 부분만 파싱
      * 3. 2줄 이상의 가사 출력
@@ -30,52 +32,65 @@ namespace Presto.SWCamp.Lyrics
      * 7. 전,후 가사 동시 출력
      * 8. 가끔 가사들을 보면 싱크가 조금 안맞는 파일들이 있기에, 싱크 조절기능이 필요할 것 같아서 추가
      * 9. 가사 파일이 없을 경우 직접 불러올 수 있도록 OpenFileDialog 버튼 추가
-         */
+     * 
+     */
 
     public partial class LyricsWindow : Window
     {
-        private List<string> _lrc = new List<string>(); // lrc 파일에서 시간 뒤의 문구(가사)를 저장하는 리스트
-        private List<int> _tm = new List<int>(); // lrc 파일에서 시간을 저장하는 list(mm:ss.ff 형식의 시간을 mm*60000 + ss*1000 + ff*10 로 저장)
-        private int syncDelay = 0;
+        // 리스트 선언, 가사와 시간을 저장, 시간은 int 형식의 ms 단위로 저장
+        // 현재 싱크의 속도를 저장하는 int 형식의 변수 선언, 양수면 싱크가 느리고 음수면 싱크가 빠르다.
+        private List<string> _lrc = new List<string>();
+        private List<int> _tm = new List<int>();
+        private int _sD = 0;
 
         public LyricsWindow()
         {
             InitializeComponent();
-            DoubleAnimation dblani = new DoubleAnimation(); // 애니메이션 추가
-            dblani.From = 0;
-            dblani.To = 1;
-            dblani.Duration = TimeSpan.FromMilliseconds(500);
-            dblani.EasingFunction = new QuarticEase();
-            this.BeginAnimation(OpacityProperty, dblani);
+            // 폼이 시작될 때 보여주는 애니메이션
+            DoubleAnimation doubleAni = new DoubleAnimation(); 
+            doubleAni.From = 0;
+            doubleAni.To = 1;
+            doubleAni.Duration = TimeSpan.FromMilliseconds(500);
+            doubleAni.EasingFunction = new QuarticEase();
+            this.BeginAnimation(OpacityProperty, doubleAni);
 
-            PrestoSDK.PrestoService.Player.StreamChanged += Stream_Changed; //음악이 바뀔 때 해당 이벤트 수행
-            var dt = new DispatcherTimer(); // 타이머 할당
-            dt.Interval = TimeSpan.FromMilliseconds(10); // 타이머 주기
-            dt.Tick += Timer_Tick; // 이벤트 지정
-            dt.Start(); // 타이머 시작
+            // 재생중인 음악이 바뀔 때 수행될 이벤트
+            PrestoSDK.PrestoService.Player.StreamChanged += Stream_Changed;
+
+            // 실시간으로 재생시간에 맞는 가사를 가져올 수 있도록 하는 타이머
+            var dt = new DispatcherTimer();
+            dt.Interval = TimeSpan.FromMilliseconds(10);
+            dt.Tick += Timer_Tick;
+            dt.Start();
         }
 
         private void Stream_Changed(object sender, EventArgs e) //음악이 바뀔 때 수행되는 이벤트
         {
-            var musicFileName = System.IO.Path.GetFileNameWithoutExtension(PrestoSDK.PrestoService.Player.CurrentMusic.Path);
-            var lyricFilePath = System.IO.Path.GetDirectoryName(PrestoSDK.PrestoService.Player.CurrentMusic.Path) + @"\" + musicFileName + ".lrc";
-            PathLrcLink(lyricFilePath);
+            var path = System.IO.Path.GetDirectoryName
+                (PrestoSDK.PrestoService.Player.CurrentMusic.Path) + @"\" +
+                System.IO.Path.GetFileNameWithoutExtension(PrestoSDK.PrestoService.Player.CurrentMusic.Path) + ".lrc";
+            PathLrcLink(path);
         }
 
         private void PathLrcLink(string p)
         {
             try
             {
-                _lrc.Clear(); // 가사 리스트 초기화
-                _tm.Clear(); // 시간 리스트 초기화
+                // 리스트 초기화
+                _lrc.Clear();
+                _tm.Clear();
 
-                string[] lines = File.ReadAllLines(p, Encoding.Default); // 경로의 파일의 줄을 읽는다. 글자가 깨지는 경우가 있어서 인코딩 입력
+                // 경로의 파일의 모든줄을 배열에 할당한다. 인코딩을 안쓰면 다른 나라의 언어가 깨지므로 Encoding 속성을 추가해줬다.
+                string[] lines = File.ReadAllLines(p, Encoding.Default);
 
-                if (PrestoSDK.PrestoService.Player.CurrentMusic.Title is null) // 음악의 타이틀이 존재하지 않을 경우 파일명으로 
+                // 재생한 음악 태그의 타이틀이 없을 경우 파일명으로 가져오기.
+                if (PrestoSDK.PrestoService.Player.CurrentMusic.Title is null)
                     _lrc.Add(System.IO.Path.GetFileNameWithoutExtension(PrestoSDK.PrestoService.Player.CurrentMusic.Path));
                 else
                     _lrc.Add(PrestoSDK.PrestoService.Player.CurrentMusic.Title);
                 _tm.Add(0);
+
+                // 리스트에 시간과 가사를 각각 저장하는 for문
                 foreach (var line in lines)
                 {
                     var m = line.Split('[')[1].Split(']')[0];
@@ -101,26 +116,32 @@ namespace Presto.SWCamp.Lyrics
                     }
                 }
             }
-            catch
+            catch // 위의 상황에서 예외 발생시(가사를 불러오지 못했을 경우)
             {
                 tbk1.Text = "";
                 tbk2.Text = "가사 파일을 불러올 수 없습니다.";
                 tbk3.Text = "";
             }
-            syncDelay = 0;
+
+            // 가사의 싱크값 초기화
+            _sD = 0;
             setSyncText();
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
             int cnt = _tm.Count;
+
+            // 가사가 리스트에 저장되 있을 경우 가사 탐색
             if (cnt != 0)
             {
                 double t = PrestoSDK.PrestoService.Player.Position;
                 int index;
-                if (t < _tm[1]) index = 0; // 현재재생시간 < 가사시간[1] 일 때
-                else if (t >= _tm[cnt - 1]) index = cnt - 1; // 현재재생시간 >= 가사[0] 일 때
-                else index = bSearch(_tm, t, 1, cnt - 1); // 이외의 경우 이진 탐색
+
+                if (t < _tm[1]) index = 0;
+                else if (t >= _tm[cnt - 1]) index = cnt - 1;
+                else index = bSearch(_tm, t, 1, cnt - 1);
+
 
                 if (index == 0) tbk1.Text = "";
                 else tbk1.Text = _lrc[index - 1].ToString();
@@ -132,6 +153,7 @@ namespace Presto.SWCamp.Lyrics
             }
         }
 
+        // 범위 이진탐색
         private static int bSearch(List<int> lst, Double val, int first, int last)
         {
             int mid = (first + last) / 2;
@@ -143,13 +165,14 @@ namespace Presto.SWCamp.Lyrics
                 return bSearch(lst, val, mid + 1, last);
         }
 
+        // 텍스트블럭에 싱크속도 보여주기
         private void setSyncText()
         {
             if (_tm.Count > 0)
             {
-                if (syncDelay > 0) tbkSync.Text = "가사 싱크 : " + (Convert.ToDouble(syncDelay) / 1000).ToString("F1") + " 초 느림";
-                else if (syncDelay == 0) tbkSync.Text = "가사 싱크 : 정상";
-                else tbkSync.Text = "가사 싱크 : " + (Convert.ToDouble(-syncDelay) / 1000).ToString("F1") + " 초 빠름";
+                if (_sD > 0) tbkSync.Text = "가사 싱크 : " + (Convert.ToDouble(_sD) / 1000).ToString("F1") + " 초 느림";
+                else if (_sD == 0) tbkSync.Text = "가사 싱크 : 정상";
+                else tbkSync.Text = "가사 싱크 : " + (Convert.ToDouble(-_sD) / 1000).ToString("F1") + " 초 빠름";
             }
             else
             {
@@ -157,24 +180,28 @@ namespace Presto.SWCamp.Lyrics
             }
         }
 
+        // 싱크 리셋버튼
         private void btnSyncRst_Click(object sender, RoutedEventArgs e)
         {
+            // 가사가 리스트에 있을 경우만 수행
             if (_tm.Count > 0)
             {
                 for (int i = 0; i < _tm.Count; i++)
                 {
                     int t;
-                    t = _tm[i] - syncDelay;
+                    t = _tm[i] - _sD;
                     _tm.RemoveAt(i);
                     _tm.Insert(i, t);
                 }
-                syncDelay = 0;
+                _sD = 0;
                 setSyncText();
             }
         }
 
+        // 싱크 느리게하는 버튼
         private void btnSyncDn_Click(object sender, RoutedEventArgs e)
         {
+            // 가사가 리스트에 있을 경우만 수행
             if (_tm.Count > 0)
             {
                 for (int i = 0; i < _tm.Count; i++)
@@ -184,13 +211,15 @@ namespace Presto.SWCamp.Lyrics
                     _tm.RemoveAt(i);
                     _tm.Insert(i, t);
                 }
-                syncDelay += 100;
+                _sD += 100;
                 setSyncText();
             }
         }
 
+        // 싱크 빠르게하는 버튼
         private void btnSyncUp_Click(object sender, RoutedEventArgs e)
         {
+            // 가사가 리스트에 있을 경우만 수행
             if (_tm.Count > 0)
             {
                 for (int i = 0; i < _tm.Count; i++)
@@ -200,18 +229,18 @@ namespace Presto.SWCamp.Lyrics
                     _tm.RemoveAt(i);
                     _tm.Insert(i, t);
                 }
-                syncDelay -= 100;
+                _sD -= 100;
                 setSyncText();
             }
         }
 
+        // 가사가 없거나, 다른 경로에 있거나 등등 새로 가사파일을 불러오고 싶을 때
         private void btnLoadLrc_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog fldlg = new OpenFileDialog();
             fldlg.Filter = "가사 파일|*.lrc|모든 파일|*.*";
             fldlg.DefaultExt = ".lrc";
             Nullable<bool> dialogOK = fldlg.ShowDialog();
-
             if (dialogOK == true)
             {
                 string f = fldlg.FileName;

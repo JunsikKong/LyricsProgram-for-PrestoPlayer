@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ps="clr-namespace:Presto.SDK;assembly=Presto.SDK"
+    xmlns:local = "clr-namespace:Presto.SWCamp.Lyrics" 
     Title="플레이어 가사 창"
     Width="750"
     Height="400"
@@ -77,5 +78,6 @@
             <Button x:Name="btnLoadLrc" Content=".lrc 불러오기" Width="80" Height="20" DockPanel.Dock="Right" Click="btnLoadLrc_Click"/>
             <TextBlock x:Name="tbkSync" Height="20" HorizontalAlignment="Left" FontSize="11" Margin="2"/>
         </DockPanel>
+        
     </Grid>
 </Window>

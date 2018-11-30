@@ -62,3 +62,4 @@ C:\Users\Administrator\source\clone\LyricsProgram-for-PrestoPlayer\Presto.SWCamp
 C:\Users\Administrator\source\clone\LyricsProgram-for-PrestoPlayer\Presto.SWCamp.Lyrics\Presto.SWCamp.Lyrics\obj\Debug\Presto.SWCamp.Lyrics.csproj.CopyComplete
 C:\Users\Administrator\source\clone\LyricsProgram-for-PrestoPlayer\Presto.SWCamp.Lyrics\Presto.SWCamp.Lyrics\obj\Debug\Presto.SWCamp.Lyrics.dll
 C:\Users\Administrator\source\clone\LyricsProgram-for-PrestoPlayer\Presto.SWCamp.Lyrics\Presto.SWCamp.Lyrics\obj\Debug\Presto.SWCamp.Lyrics.pdb
+C:\Users\Administrator\source\clone\LyricsProgram-for-PrestoPlayer\Presto.SWCamp.Lyrics\Presto.SWCamp.Lyrics\obj\Debug\Presto.SWCamp.Lyrics_MarkupCompile.lref
