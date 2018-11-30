@@ -32,7 +32,7 @@ namespace Presto.SWCamp.Lyrics
      * 7. 전,후 가사 동시 출력
      * 8. 가끔 가사들을 보면 싱크가 조금 안맞는 파일들이 있기에, 싱크 조절기능이 필요할 것 같아서 추가
      * 9. 가사 파일이 없을 경우 직접 불러올 수 있도록 OpenFileDialog 버튼 추가
-     * 
+     * 10. 현재 가사 내용 그림자 효과
      */
 
     public partial class LyricsWindow : Window
