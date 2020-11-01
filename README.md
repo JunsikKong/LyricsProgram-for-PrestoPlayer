@@ -1,9 +1,6 @@
 # LyricsProgram for PrestoPlayer
 PrestoPlayer 가사 프로그램
 
-## 제작자
-* 우석대학교 진천캠퍼스 공준식
-
 ## 설명
 * 충북대학교에서 시행한 소프트웨어 캠프 과제입니다.
 * PrestoPlayer의 가사를 출력하는 프로그램입니다.
